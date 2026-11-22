@@ -1,57 +1,33 @@
-# Equine Pedigree Engine
+# Horse
 
-An interactive pedigree visualizer, lineage tracker, and selective breeding optimization engine for Minecraft horses. Built with React, TypeScript, Tailwind CSS, and directed graph visualization to model genetic inheritance and determine the optimal generational pairings required to produce a theoretically maxed horse.
+A pedigree visualizer and selective breeding optimization engine for Minecraft horses. Built with React, TypeScript, Tailwind CSS, and React Flow.
 
 ---
 
 ## Overview
 
-In Minecraft 1.20+, horse breeding mechanics were revised to replace flat averaging with a dynamic spread distribution centered around parental attributes. While this revision enabled progressive multi-generational breeding, identifying optimal pairings across foundation stock, descendants, and cross-generational backcrosses remains computationally complex.
+Minecraft 1.20 introduced a bell-curve spread mechanic for horse breeding, replacing flat parental averaging with a dynamic variance formula. Because offspring can inherit attributes matching or exceeding parental ceilings, optimal progression requires strategic pairings across foundation stock and previous generations.
 
-Equine Pedigree Engine resolves this by maintaining a complete genealogical graph of your stable and computing the exact statistical distance between candidate foal outcomes and the theoretical game-engine ceiling.
-
-The engine evaluates all candidate combinations across all available generations and presents strictly the single optimal pairing to breed next.
+Horse models the complete lineage tree of your stable on an interactive canvas and calculates the single optimal pairing to breed next to reach the theoretical game maximums.
 
 ---
 
-## Core Capabilities
+## Features
 
-### 1. Interactive Pedigree Tree (Directed Acyclic Graph)
-- Real-time rendering of breeding lineage across Generation 0 (foundation stock), Generation 1, and subsequent descendants.
-- Parentage relationship mapping with directional connections from Sire and Dam to offspring.
-- Dynamic layout engine grouping nodes by generational depth with zoom, pan, and minimap navigation.
-- Visual highlighting of the active optimal breeding pair directly on the graph canvas.
-
-### 2. Cross-Generational Optimization Engine
-- Analyzes all candidate pairs within the stable across all generations, including:
-  - Foundation crosses (Gen 0 x Gen 0)
-  - Direct backcrosses (Parent x Offspring)
-  - Grandparent backcrosses (Grandparent x Offspring)
-  - Sibling and half-sibling crosses
-  - Inter-lineage multi-generational crosses
-- Evaluates candidate pairs against the theoretical maximum ceiling:
-  - Health: 15.0 Hearts (30.0 HP)
-  - Speed: 14.57 blocks/second (0.3375 internal movement speed attribute)
-  - Jump Height: 5.25 blocks clearance (1.0 internal jump strength attribute)
-- Ranks candidates by Euclidean distance reduction to the ultimate goal, supplemented by the 1.20+ spread upside factor.
-- Outputs exclusively the single optimal pairing with detailed expected value forecasts and win probabilities.
-
-### 3. Practical In-Game Measurement Inputs
-- Movement Speed: Input measured sprint time in seconds across a standard 100-block flat track. The engine automatically calculates blocks per second and internal attribute values.
-- Jump Height: Input maximum cleanly cleared obstacle height in blocks. Inverted via trajectory polynomial bisection into the internal jump strength attribute.
-- Health: Input observed hearts directly (7.5 to 15.0 hearts, supporting half-heart increments).
-
-### 4. Dynamic Data Persistence
-- Client-side storage via local storage with JSON export and import capabilities.
-- Dynamic data modeling with zero hardcoded stable entities.
+- Interactive Pedigree Graph: Full-screen directed acyclic graph mapping lineage across generations with pan, zoom, and minimap controls.
+- Dynamic Cross-Generational Matchmaker: Evaluates all living horses across all generations (foundation crosses, backcrosses, sibling crosses) and outputs strictly the single best pairing.
+- Real In-Game Asset Visuals: Renders coat colors using offline Minecraft horse textures.
+- Measurable Survival Inputs: Input sprint times over a 100-block runway, hurdle clearance in blocks, and visible heart counts.
+- Client-Side Persistence: Zero external database requirement. Stored in local storage with JSON import and export options.
+- No Hardcoded Stock: Clean slate design where every horse is registered by the player.
 
 ---
 
-## Mathematical Formulation
+## Mathematical Specification
 
-### 1. Genetic Roll Mechanics (Minecraft 1.20+)
+### Inheritance Formula (1.20+)
 
-For any given attribute $X$ with legal domain $[\text{Min}, \text{Max}]$:
+For an attribute $X$ bounded by $[\text{Min}, \text{Max}]$:
 
 $$\text{Midpoint} = \frac{P_A + P_B}{2}$$
 
@@ -59,92 +35,99 @@ $$\text{Spread} = |P_A - P_B| + 0.3 \times (\text{Max} - \text{Min})$$
 
 $$\text{Roll} = \left(\frac{U_1 + U_2 + U_3}{3}\right) - 0.5, \quad U_i \sim \text{Uniform}(0, 1)$$
 
-$$\text{Foal Attribute} = \text{clamp}(\text{Midpoint} + \text{Spread} \times \text{Roll}, \text{Min}, \text{Max})$$
+$$\text{Value} = \text{clamp}(\text{Midpoint} + \text{Spread} \times \text{Roll}, \text{Min}, \text{Max})$$
 
-Because $\text{Roll}$ follows an Irwin-Hall distribution with $n=3$ shifted by $-0.5$, cumulative distribution probabilities ($P(\text{Foal} \ge T)$) are computed in closed form using the piecewise cubic spline CDF, providing exact probabilities without Monte Carlo noise.
+Probabilities of surpassing parental thresholds are computed analytically via the closed-form Irwin-Hall ($n=3$) cumulative distribution function.
 
-### 2. Jump Height Trajectory Inversion
+### Jump Trajectory Inversion
 
-Jump height $y$ (in blocks) is mapped to internal attribute $x \in [0.4, 1.0]$ via the trajectory polynomial:
+In-game jump clearance $y$ (in blocks) is mapped to internal attribute $x \in [0.4, 1.0]$ using trajectory bisection over the game's polynomial:
 
 $$y(x) = -0.1817584952 x^3 + 3.689713992 x^2 + 2.128599134 x - 0.343930367$$
 
-The engine determines the required internal attribute $x$ from in-game obstacle clearance $y$ via binary search inversion to within $10^{-4}$ tolerance.
+### Ultimate Target Benchmark
+
+- Health: 15.0 Hearts (30.0 HP)
+- Speed: 14.57 blocks/second (0.3375 movement speed attribute)
+- Jump Height: 5.25 blocks clearance (1.0 jump strength attribute)
 
 ---
 
-## Technology Stack
+## In-Game Measurement Setup
 
-- Language: TypeScript 5.6
-- Framework: React 18
-- Build Tool: Vite 5.4
-- Graph Visualization: React Flow (@xyflow/react)
-- Styling: Tailwind CSS
-- Testing: Vitest
-- Desktop Runtime: Electron
+1. Speed: Construct a 100-block straight track with pressure plates or a stopwatch. Record elapsed sprint time in seconds (natural range: 6.86s to 20.6s).
+2. Jump Height: Stack fences or blocks (1 fence = 1.5 blocks, 2 blocks = 2.0 blocks, 2 fences = 3.0 blocks, 3 fences = 4.5 blocks). Enter highest cleanly cleared hurdle.
+3. Health: Count hearts displayed on the HUD when mounted (range: 7.5 to 15.0 hearts).
 
 ---
 
 ## Project Structure
 
 ```text
-horse-pedigree-engine/
+Horse/
 ├── src/
 │   ├── components/
 │   │   ├── tree/               # React Flow pedigree nodes and tree canvas
-│   │   ├── stable/             # Horse card grid and detailed metrics
-│   │   ├── forms/              # Horse registration modal and live converters
-│   │   └── recommendations/    # Single optimal pair spotlight and forecast
+│   │   ├── stable/             # Horse card components
+│   │   ├── forms/              # Registration modal with live unit converters
+│   │   └── recommendations/    # Optimal pair spotlight and breeding action
 │   ├── engine/
-│   │   ├── conversions.ts      # Unit transformations (100m sprint, jump, HP)
-│   │   ├── genetics.ts         # Irwin-Hall distribution and 1.20+ inheritance
-│   │   ├── optimizer.ts        # Cross-generational candidate pair selector
-│   │   ├── engine.test.ts      # Vitest automated test suite
-│   │   └── types.ts            # Domain entity interfaces and goal constants
+│   │   ├── conversions.ts      # Speed, jump, and health transformations
+│   │   ├── genetics.ts         # 1.20+ formula and Irwin-Hall probability CDF
+│   │   ├── optimizer.ts        # Cross-generational pairing selector
+│   │   ├── horseImages.ts      # Offline texture mapping helper
+│   │   ├── engine.test.ts      # Vitest test suite
+│   │   └── types.ts            # Type definitions and benchmark constants
 │   ├── store/
-│   │   └── useHorseStore.ts    # State management and local storage persistence
-│   ├── App.tsx                 # Main layout and view mode controller
-│   ├── index.css               # Base Tailwind stylesheets
-│   └── main.tsx                # Client application root
+│   │   └── useHorseStore.ts    # Local storage persistence
+│   ├── App.tsx                 # View layout
+│   └── main.tsx                # Client root
+├── public/horses/              # Offline coat textures
 ├── electron/
-│   └── main.cjs                # Electron desktop wrapper
-├── package.json
-├── tailwind.config.js
-├── tsconfig.json
-└── vite.config.ts
+│   └── main.cjs                # Desktop wrapper
+└── horse.exe                   # Standalone desktop executable
 ```
 
 ---
 
-## Getting Started
+## Development and Build Commands
 
-### Prerequisites
-- Node.js (v18.0 or higher)
-- npm (v9.0 or higher)
-
-### Installation
+### Install Dependencies
 ```bash
-git clone https://github.com/Anames-dex/Horse.git
-cd Horse
 npm install
 ```
 
-### Development Server
+### Run Web Development Server
 ```bash
 npm run dev
 ```
 
-### Production Web Build
+### Execute Test Suite
+```bash
+npm run test
+```
+
+### Compile Production Web Build
 ```bash
 npm run build
 ```
 
-### Running as Desktop Application
+### Launch Desktop Application
 ```bash
 npm run desktop
 ```
 
-### Running Test Suite
+### Package Standalone Executable
 ```bash
-npm run test
+npm run package:exe
 ```
+
+---
+
+## Contributing
+
+Review [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines, testing requirements, and branch workflows.
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
