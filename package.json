@@ -14,12 +14,13 @@
   },
   "build": {
     "appId": "com.equine.pedigree",
-    "productName": "EquinePedigreeEngine",
+    "productName": "horse",
     "directories": {
       "output": "dist-electron"
     },
     "win": {
-      "target": "portable"
+      "target": "portable",
+      "artifactName": "horse.exe"
     },
     "files": [
       "dist/**/*",
