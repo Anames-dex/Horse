@@ -8,7 +8,7 @@ import {
   jumpHeightToAttr,
   calculateOverallRating,
 } from './conversions';
-import { calculate120StatPrediction, forecastBreeding } from './genetics';
+import { calculate120StatPrediction } from './genetics';
 import { findSingleOptimalPair } from './optimizer';
 import { Horse } from './types';
 

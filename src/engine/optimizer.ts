@@ -5,15 +5,11 @@ import {
 } from './types';
 import { forecastBreeding } from './genetics';
 import {
-  heartsToHp,
   time100mToSpeedAttr,
   jumpHeightToAttr,
   MIN_HEALTH_HP,
-  MAX_HEALTH_HP,
   MIN_SPEED_ATTR,
-  MAX_SPEED_ATTR,
   MIN_JUMP_ATTR,
-  MAX_JUMP_ATTR,
 } from './conversions';
 
 /**
@@ -91,18 +87,14 @@ export function findSingleOptimalPair(horses: Horse[]): OptimalPairRecommendatio
 
       const forecast = forecastBreeding(parentA, parentB);
 
-      // Normalize expected foal metrics to the ultimate goal limits [0.0, 1.0]
-      const goalHp = ULTIMATE_HORSE_GOAL.hp;
-      const goalSpeed = ULTIMATE_HORSE_GOAL.speedAttr;
-      const goalJump = ULTIMATE_HORSE_GOAL.jumpAttr;
-
-      const foalHpNorm = (forecast.expectedHp - MIN_HEALTH_HP) / (MAX_HEALTH_HP - MIN_HEALTH_HP);
+      // Normalize expected foal metrics to the hardcoded ultimate goal limits [0.0, 1.0]
+      const foalHpNorm = (forecast.expectedHp - MIN_HEALTH_HP) / (ULTIMATE_HORSE_GOAL.hp - MIN_HEALTH_HP);
       const foalSpeedNorm =
         (time100mToSpeedAttr(forecast.expectedTime100m) - MIN_SPEED_ATTR) /
-        (MAX_SPEED_ATTR - MIN_SPEED_ATTR);
+        (ULTIMATE_HORSE_GOAL.speedAttr - MIN_SPEED_ATTR);
       const foalJumpNorm =
         (jumpHeightToAttr(forecast.expectedJumpHeight) - MIN_JUMP_ATTR) /
-        (MAX_JUMP_ATTR - MIN_JUMP_ATTR);
+        (ULTIMATE_HORSE_GOAL.jumpAttr - MIN_JUMP_ATTR);
 
       // Calculate distance to ultimate goal (0 is perfect)
       const distanceToGoal = Math.sqrt(
