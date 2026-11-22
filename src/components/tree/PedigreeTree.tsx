@@ -16,8 +16,9 @@ interface PedigreeTreeProps {
   horses: Horse[];
   optimalSireId?: string;
   optimalDamId?: string;
-  selectedHorseId?: string | null;
-  onSelectHorse?: (id: string) => void;
+  onEditHorse?: (horse: Horse) => void;
+  onDeleteHorse?: (id: string) => void;
+  onAddHorse?: () => void;
 }
 
 const nodeTypes = {
@@ -28,9 +29,10 @@ export const PedigreeTree: React.FC<PedigreeTreeProps> = ({
   horses,
   optimalSireId,
   optimalDamId,
-  onSelectHorse,
+  onEditHorse,
+  onDeleteHorse,
+  onAddHorse,
 }) => {
-  // Compute positions and layout dynamically based on generations
   const { nodes, edges } = useMemo(() => {
     const nodesList: Node[] = [];
     const edgesList: Edge[] = [];
@@ -51,12 +53,12 @@ export const PedigreeTree: React.FC<PedigreeTreeProps> = ({
     sortedGens.forEach((gen) => {
       const list = byGen.get(gen)!;
       const count = list.length;
-      const totalWidth = count * 290;
-      const startX = -totalWidth / 2 + 145;
+      const totalWidth = count * 320;
+      const startX = -totalWidth / 2 + 160;
 
       list.forEach((horse, idx) => {
-        const xPos = startX + idx * 290;
-        const yPos = gen * 230;
+        const xPos = startX + idx * 320;
+        const yPos = gen * 220;
 
         nodesList.push({
           id: horse.id,
@@ -66,7 +68,8 @@ export const PedigreeTree: React.FC<PedigreeTreeProps> = ({
             horse,
             isOptimalSire: horse.id === optimalSireId,
             isOptimalDam: horse.id === optimalDamId,
-            onSelectHorse,
+            onEditHorse,
+            onDeleteHorse,
           },
         });
 
@@ -116,7 +119,29 @@ export const PedigreeTree: React.FC<PedigreeTreeProps> = ({
     });
 
     return { nodes: nodesList, edges: edgesList };
-  }, [horses, optimalSireId, optimalDamId, onSelectHorse]);
+  }, [horses, optimalSireId, optimalDamId, onEditHorse, onDeleteHorse]);
+
+  if (horses.length === 0) {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-950 p-6 text-center">
+        <div className="max-w-sm p-6 rounded-xl border border-zinc-800 bg-zinc-900/60">
+          <h3 className="text-sm font-semibold text-zinc-200">No Horses Registered</h3>
+          <p className="text-xs text-zinc-400 mt-1 mb-4">
+            Add foundation horses by entering their in-game hearts, 100-block sprint time, and jump height.
+          </p>
+          {onAddHorse && (
+            <button
+              type="button"
+              onClick={onAddHorse}
+              className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition"
+            >
+              Add First Horse
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-full relative bg-zinc-950">
@@ -125,12 +150,12 @@ export const PedigreeTree: React.FC<PedigreeTreeProps> = ({
         edges={edges}
         nodeTypes={nodeTypes}
         fitView
-        fitViewOptions={{ padding: 0.25 }}
+        fitViewOptions={{ padding: 0.2 }}
         minZoom={0.2}
         maxZoom={1.5}
         className="bg-zinc-950"
       >
-        <Background color="#27272a" gap={20} size={1} />
+        <Background color="#27272a" gap={24} size={1} />
         <Controls className="!bg-zinc-900 !border-zinc-800" />
         <MiniMap
           nodeColor={(n) => {

@@ -8,7 +8,7 @@ function createWindow() {
     minWidth: 900,
     minHeight: 600,
     backgroundColor: '#09090b',
-    title: 'Equine Pedigree Engine',
+    title: 'Horse',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

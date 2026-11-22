@@ -1,104 +1,115 @@
 import React from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
 import { Horse } from '../../engine/types';
-import { heartsToHp, time100mToBps, calculateOverallRating } from '../../engine/conversions';
-import { Heart, Zap, ArrowUp } from 'lucide-react';
+import { heartsToHp, time100mToBps } from '../../engine/conversions';
+import { getHorseImageUrl } from '../../engine/horseImages';
+import { Edit2, Trash2 } from 'lucide-react';
 
 export interface HorseNodeData {
   horse: Horse;
   isOptimalSire?: boolean;
   isOptimalDam?: boolean;
-  onSelectHorse?: (id: string) => void;
+  onEditHorse?: (horse: Horse) => void;
+  onDeleteHorse?: (id: string) => void;
 }
 
 export const HorseTreeNode: React.FC<NodeProps> = ({ data }) => {
   const nodeData = data as unknown as HorseNodeData;
-  const { horse, isOptimalSire, isOptimalDam, onSelectHorse } = nodeData;
+  const { horse, isOptimalSire, isOptimalDam, onEditHorse, onDeleteHorse } = nodeData;
 
   const hp = heartsToHp(horse.hearts);
   const speedBps = time100mToBps(horse.time100m);
-  const rating = calculateOverallRating(horse.hearts, horse.time100m, horse.jumpHeight);
-
   const isOptimal = isOptimalSire || isOptimalDam;
 
   return (
     <div
-      onClick={() => onSelectHorse?.(horse.id)}
-      className={`relative w-64 rounded-xl border transition-all duration-200 cursor-pointer shadow-xl p-3.5 backdrop-blur-md ${
+      className={`relative w-72 rounded-xl border transition-colors shadow-lg p-3 bg-zinc-900 ${
         isOptimal
-          ? 'bg-zinc-900/95 border-emerald-400 ring-2 ring-emerald-500/80 shadow-emerald-950/60'
-          : 'bg-zinc-900/90 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900'
+          ? 'border-emerald-500 ring-1 ring-emerald-500'
+          : 'border-zinc-800 hover:border-zinc-700'
       }`}
     >
-      {/* Target handle at top for parent incoming connections */}
       <Handle
         type="target"
         position={Position.Top}
         className="!bg-zinc-600 !w-2.5 !h-2.5 !border-zinc-900"
       />
 
-      {/* Header */}
-      <div className="flex items-start justify-between gap-1 mb-2">
-        <div className="truncate">
-          <div className="flex items-center gap-1.5">
-            <h4 className="font-semibold text-sm text-zinc-100 truncate tracking-tight">
+      {/* Horse Visual & Info Header */}
+      <div className="flex items-center gap-3 mb-2.5">
+        <div className="w-14 h-14 rounded-lg bg-zinc-950 border border-zinc-800 flex items-center justify-center overflow-hidden flex-shrink-0">
+          <img
+            src={getHorseImageUrl(horse.coatColor)}
+            alt={horse.coatColor || 'Horse'}
+            className="w-12 h-12 object-contain"
+          />
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-1">
+            <h4 className="font-semibold text-sm text-zinc-100 truncate">
               {horse.name}
             </h4>
-            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-300 border border-zinc-700/60">
-              G{horse.generation}
+            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700/60 flex-shrink-0">
+              Gen {horse.generation}
             </span>
           </div>
-          <p className="text-[11px] text-zinc-400 font-mono truncate">
+          <p className="text-[11px] text-zinc-400 font-mono truncate mt-0.5">
             {horse.coatColor || 'White'} &bull; {horse.coatPattern || 'None'}
           </p>
-        </div>
-
-        {/* Rating */}
-        <div className="text-right flex-shrink-0">
-          <span className="text-xs font-mono font-medium text-emerald-400">
-            {rating}%
-          </span>
+          {isOptimal && (
+            <span className="inline-block text-[10px] font-mono text-emerald-400 font-medium mt-0.5">
+              {isOptimalSire ? 'Optimal Parent A' : 'Optimal Parent B'}
+            </span>
+          )}
         </div>
       </div>
 
-      {/* Stat Grid */}
-      <div className="grid grid-cols-3 gap-1.5 py-1.5 px-2 rounded-lg bg-zinc-950/70 border border-zinc-800/60 text-[11px] font-mono">
-        {/* Health */}
-        <div className="space-y-0.5">
-          <div className="flex items-center gap-0.5 text-zinc-400">
-            <Heart className="w-3 h-3 text-rose-500" />
-            <span className="text-[9px] uppercase">HP</span>
-          </div>
-          <div className="font-semibold text-zinc-200">{hp}</div>
+      {/* Three Core Stats */}
+      <div className="grid grid-cols-3 gap-1.5 py-1.5 px-2 rounded-lg bg-zinc-950 border border-zinc-800 text-[11px] font-mono">
+        <div>
+          <span className="text-[9px] text-zinc-400 block uppercase">Health</span>
+          <span className="font-semibold text-zinc-200">{hp} HP</span>
         </div>
-
-        {/* Speed */}
-        <div className="space-y-0.5">
-          <div className="flex items-center gap-0.5 text-zinc-400">
-            <Zap className="w-3 h-3 text-sky-400" />
-            <span className="text-[9px] uppercase">BPS</span>
-          </div>
-          <div className="font-semibold text-zinc-200">{speedBps}</div>
+        <div>
+          <span className="text-[9px] text-zinc-400 block uppercase">Speed</span>
+          <span className="font-semibold text-zinc-200">{speedBps} b/s</span>
         </div>
-
-        {/* Jump */}
-        <div className="space-y-0.5">
-          <div className="flex items-center gap-0.5 text-zinc-400">
-            <ArrowUp className="w-3 h-3 text-amber-400" />
-            <span className="text-[9px] uppercase">JUMP</span>
-          </div>
-          <div className="font-semibold text-zinc-200">{horse.jumpHeight}m</div>
+        <div>
+          <span className="text-[9px] text-zinc-400 block uppercase">Jump</span>
+          <span className="font-semibold text-zinc-200">{horse.jumpHeight}m</span>
         </div>
       </div>
 
-      {/* Optimal Match Tag Badge */}
-      {isOptimal && (
-        <div className="mt-2 text-center py-0.5 px-2 rounded bg-emerald-950/80 border border-emerald-500/50 text-[10px] font-mono text-emerald-300 font-medium">
-          {isOptimalSire ? 'Optimal Parent A' : 'Optimal Parent B'}
+      {/* Action Row */}
+      <div className="flex items-center justify-between pt-2 mt-2 border-t border-zinc-800/60 text-[11px]">
+        <span className="text-zinc-400 font-mono text-[10px]">
+          {horse.hearts} hearts &bull; {horse.time100m}s sprint
+        </span>
+        <div className="flex items-center gap-1">
+          {onEditHorse && (
+            <button
+              type="button"
+              onClick={() => onEditHorse(horse)}
+              className="p-1 rounded text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition"
+              title="Edit"
+            >
+              <Edit2 className="w-3 h-3" />
+            </button>
+          )}
+          {onDeleteHorse && (
+            <button
+              type="button"
+              onClick={() => onDeleteHorse(horse.id)}
+              className="p-1 rounded text-zinc-400 hover:text-rose-400 hover:bg-zinc-800 transition"
+              title="Delete"
+            >
+              <Trash2 className="w-3 h-3" />
+            </button>
+          )}
         </div>
-      )}
+      </div>
 
-      {/* Source handle at bottom for connections to offspring */}
       <Handle
         type="source"
         position={Position.Bottom}
