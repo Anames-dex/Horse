@@ -16,6 +16,93 @@ import {
   X,
 } from 'lucide-react';
 
+const VALID_COAT_COLORS = new Set([
+  'White',
+  'Creamy',
+  'Chestnut',
+  'Brown',
+  'Black',
+  'Gray',
+  'Dark Brown',
+]);
+
+const VALID_COAT_PATTERNS = new Set([
+  'None',
+  'White Stockings',
+  'Whitefield',
+  'White Dots',
+  'Black Dots',
+]);
+
+function validateAndSanitizeHorses(raw: unknown): Horse[] {
+  if (!Array.isArray(raw)) {
+    throw new Error('Imported data must be an array of horses.');
+  }
+
+  const validHorses: Horse[] = [];
+  const seenIds = new Set<string>();
+
+  for (let i = 0; i < raw.length; i++) {
+    const item = raw[i];
+    if (typeof item !== 'object' || item === null || Array.isArray(item)) {
+      continue;
+    }
+
+    const candidate = item as Record<string, unknown>;
+
+    let id = typeof candidate.id === 'string' && candidate.id.trim() ? candidate.id.trim() : '';
+    if (!id || seenIds.has(id)) {
+      id = 'h-' + Date.now() + '-' + i + '-' + Math.random().toString(36).substring(2, 6);
+    }
+    seenIds.add(id);
+
+    const rawName = typeof candidate.name === 'string' ? candidate.name.trim() : '';
+    const name = rawName.slice(0, 64) || `Imported Horse ${i + 1}`;
+
+    const rawHearts = typeof candidate.hearts === 'number' ? candidate.hearts : parseFloat(String(candidate.hearts));
+    const hearts = Number.isFinite(rawHearts) ? Math.max(7.5, Math.min(15.0, Number(rawHearts.toFixed(1)))) : 10.0;
+
+    const rawTime = typeof candidate.time100m === 'number' ? candidate.time100m : parseFloat(String(candidate.time100m));
+    const time100m = Number.isFinite(rawTime) && rawTime > 0 ? Math.max(5.0, Math.min(30.0, Number(rawTime.toFixed(2)))) : 9.5;
+
+    const rawJump = typeof candidate.jumpHeight === 'number' ? candidate.jumpHeight : parseFloat(String(candidate.jumpHeight));
+    const jumpHeight = Number.isFinite(rawJump) ? Math.max(1.0, Math.min(6.0, Number(rawJump.toFixed(2)))) : 3.0;
+
+    const coatColor = VALID_COAT_COLORS.has(String(candidate.coatColor))
+      ? (candidate.coatColor as Horse['coatColor'])
+      : 'White';
+    const coatPattern = VALID_COAT_PATTERNS.has(String(candidate.coatPattern))
+      ? (candidate.coatPattern as Horse['coatPattern'])
+      : 'None';
+
+    const sireId = typeof candidate.sireId === 'string' && candidate.sireId.trim() ? candidate.sireId.trim() : null;
+    const damId = typeof candidate.damId === 'string' && candidate.damId.trim() ? candidate.damId.trim() : null;
+
+    const rawGen = typeof candidate.generation === 'number' ? candidate.generation : parseInt(String(candidate.generation), 10);
+    const generation = Number.isInteger(rawGen) && rawGen >= 0 ? rawGen : 0;
+
+    const notes = typeof candidate.notes === 'string' ? candidate.notes.trim().slice(0, 500) : undefined;
+    const createdAt = typeof candidate.createdAt === 'number' && Number.isFinite(candidate.createdAt) ? candidate.createdAt : Date.now();
+
+    validHorses.push({
+      id,
+      name,
+      hearts,
+      time100m,
+      jumpHeight,
+      coatColor,
+      coatPattern,
+      sireId: sireId === id ? null : sireId,
+      damId: damId === id ? null : damId,
+      generation,
+      notes,
+      createdAt,
+    });
+  }
+
+  return validHorses;
+}
+
 export const App: React.FC = () => {
   const {
     horses,
@@ -78,8 +165,11 @@ export const App: React.FC = () => {
     reader.onload = (event) => {
       try {
         const parsed = JSON.parse(event.target?.result as string);
-        if (Array.isArray(parsed)) {
-          importHorses(parsed);
+        const sanitized = validateAndSanitizeHorses(parsed);
+        if (sanitized.length > 0) {
+          importHorses(sanitized);
+        } else {
+          alert('No valid horse records found in file.');
         }
       } catch {
         alert('Invalid JSON file format.');

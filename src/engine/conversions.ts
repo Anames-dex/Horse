@@ -14,28 +14,32 @@ export const MIN_JUMP_ATTR = 0.4;
 export const MAX_JUMP_ATTR = 1.0;
 
 export function heartsToHp(hearts: number): number {
+  if (!Number.isFinite(hearts) || hearts < 0) return 0;
   return Number((hearts * 2).toFixed(1));
 }
 
 export function hpToHearts(hp: number): number {
+  if (!Number.isFinite(hp) || hp < 0) return 0;
   return Number((hp / 2).toFixed(1));
 }
 
 export function time100mToBps(timeSec: number): number {
-  if (timeSec <= 0) return 0;
+  if (!Number.isFinite(timeSec) || timeSec <= 0) return 0;
   return Number((100 / timeSec).toFixed(2));
 }
 
 export function bpsToTime100m(bps: number): number {
-  if (bps <= 0) return 0;
+  if (!Number.isFinite(bps) || bps <= 0) return 0;
   return Number((100 / bps).toFixed(2));
 }
 
 export function bpsToSpeedAttr(bps: number): number {
+  if (!Number.isFinite(bps) || bps <= 0) return 0;
   return bps / SPEED_FACTOR;
 }
 
 export function speedAttrToBps(attr: number): number {
+  if (!Number.isFinite(attr) || attr <= 0) return 0;
   return Number((attr * SPEED_FACTOR).toFixed(2));
 }
 
@@ -55,6 +59,7 @@ export function speedAttrToTime100m(attr: number): number {
  * y = -0.1817584952*x^3 + 3.689713992*x^2 + 2.128599134*x - 0.343930367
  */
 export function jumpAttrToHeight(attr: number): number {
+  if (!Number.isFinite(attr)) return 0;
   const x = Math.max(MIN_JUMP_ATTR, Math.min(MAX_JUMP_ATTR, attr));
   const height =
     -0.1817584952 * Math.pow(x, 3) +
@@ -68,6 +73,7 @@ export function jumpAttrToHeight(attr: number): number {
  * Inverts jump height in blocks back to internal jump_strength attribute using bisection.
  */
 export function jumpHeightToAttr(targetHeight: number): number {
+  if (!Number.isFinite(targetHeight) || targetHeight <= 0) return MIN_JUMP_ATTR;
   const hMin = jumpAttrToHeight(MIN_JUMP_ATTR);
   const hMax = jumpAttrToHeight(MAX_JUMP_ATTR);
 

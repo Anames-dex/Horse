@@ -112,7 +112,7 @@ export function findSingleOptimalPair(horses: Horse[]): OptimalPairRecommendatio
       // Score: 100 is maximum match towards the goal
       const score = Math.max(0, Math.min(100, (1 - distanceToGoal) * 85 + upsideBonus * 15));
 
-      if (score > highestScore) {
+      if (Number.isFinite(score) && score > highestScore) {
         highestScore = score;
 
         const relationship = getGenerationalRelationship(parentA, parentB, horseMap);

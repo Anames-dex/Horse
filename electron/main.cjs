@@ -12,7 +12,27 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      sandbox: true,
+      webSecurity: true,
+      allowRunningInsecureContent: false,
     },
+  });
+
+  // Block opening external windows / popups from renderer
+  win.webContents.setWindowOpenHandler(() => {
+    return { action: 'deny' };
+  });
+
+  // Guard navigation to prevent loading remote external URLs
+  win.webContents.on('will-navigate', (event, url) => {
+    if (!url.startsWith('file://') && !url.startsWith('http://localhost:3000')) {
+      event.preventDefault();
+    }
+  });
+
+  // Deny all unnecessary system permission requests
+  win.webContents.session.setPermissionRequestHandler((webContents, permission, callback) => {
+    callback(false);
   });
 
   // Remove standard default menu bar for clean app look

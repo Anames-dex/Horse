@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Horse, CoatColor, CoatPattern } from '../../engine/types';
 import {
   heartsToHp,
@@ -14,6 +14,26 @@ interface HorseModalProps {
   onSave: (data: Omit<Horse, 'id' | 'createdAt'>) => void;
   editingHorse?: Horse | null;
   existingHorses: Horse[];
+}
+
+function getDescendantIds(horseId: string, horses: Horse[]): Set<string> {
+  const descendants = new Set<string>();
+  let added = true;
+  while (added) {
+    added = false;
+    for (const h of horses) {
+      if (!descendants.has(h.id)) {
+        if (
+          (h.sireId && (h.sireId === horseId || descendants.has(h.sireId))) ||
+          (h.damId && (h.damId === horseId || descendants.has(h.damId)))
+        ) {
+          descendants.add(h.id);
+          added = true;
+        }
+      }
+    }
+  }
+  return descendants;
 }
 
 const COAT_COLORS: CoatColor[] = [
@@ -51,6 +71,13 @@ export const HorseModal: React.FC<HorseModalProps> = ({
   const [damId, setDamId] = useState<string>('');
   const [notes, setNotes] = useState('');
   const [showGuide, setShowGuide] = useState(false);
+
+  const excludedIds = useMemo(() => {
+    if (!editingHorse) return new Set<string>();
+    const desc = getDescendantIds(editingHorse.id, existingHorses);
+    desc.add(editingHorse.id);
+    return desc;
+  }, [editingHorse, existingHorses]);
 
   useEffect(() => {
     if (editingHorse) {
@@ -269,7 +296,7 @@ export const HorseModal: React.FC<HorseModalProps> = ({
                 >
                   <option value="">None (Foundation Wild Stock)</option>
                   {existingHorses
-                    .filter((h) => h.id !== editingHorse?.id)
+                    .filter((h) => !excludedIds.has(h.id))
                     .map((h) => (
                       <option key={h.id} value={h.id}>
                         {h.name} (Gen {h.generation})
@@ -287,7 +314,7 @@ export const HorseModal: React.FC<HorseModalProps> = ({
                 >
                   <option value="">None (Foundation Wild Stock)</option>
                   {existingHorses
-                    .filter((h) => h.id !== editingHorse?.id && h.id !== sireId)
+                    .filter((h) => !excludedIds.has(h.id) && h.id !== sireId)
                     .map((h) => (
                       <option key={h.id} value={h.id}>
                         {h.name} (Gen {h.generation})

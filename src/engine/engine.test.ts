@@ -36,6 +36,20 @@ describe('Engine Conversions', () => {
     const rating = calculateOverallRating(15.0, 6.86, 5.25);
     expect(rating).toBeGreaterThanOrEqual(99.0);
   });
+
+  it('safely handles non-finite and boundary edge cases', () => {
+    expect(time100mToBps(0)).toBe(0);
+    expect(time100mToBps(-5)).toBe(0);
+    expect(time100mToBps(NaN)).toBe(0);
+    expect(time100mToBps(Infinity)).toBe(0);
+    expect(bpsToTime100m(0)).toBe(0);
+    expect(bpsToTime100m(-10)).toBe(0);
+    expect(jumpHeightToAttr(0)).toBe(0.4);
+    expect(jumpHeightToAttr(-5)).toBe(0.4);
+    expect(jumpHeightToAttr(100)).toBe(1.0);
+    expect(jumpAttrToHeight(NaN)).toBe(0);
+    expect(heartsToHp(-1)).toBe(0);
+  });
 });
 
 describe('Genetics Prediction 1.20+', () => {

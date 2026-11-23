@@ -38,6 +38,7 @@ export const PedigreeTree: React.FC<PedigreeTreeProps> = ({
     const edgesList: Edge[] = [];
 
     // Group horses by generation
+    const horseIdSet = new Set(horses.map((h) => h.id));
     const byGen = new Map<number, Horse[]>();
     for (const h of horses) {
       const g = h.generation || 0;
@@ -73,8 +74,8 @@ export const PedigreeTree: React.FC<PedigreeTreeProps> = ({
           },
         });
 
-        // Add parent edges
-        if (horse.sireId) {
+        // Add parent edges if parents exist in roster
+        if (horse.sireId && horseIdSet.has(horse.sireId)) {
           edgesList.push({
             id: `e-sire-${horse.sireId}-${horse.id}`,
             source: horse.sireId,
@@ -95,7 +96,7 @@ export const PedigreeTree: React.FC<PedigreeTreeProps> = ({
           });
         }
 
-        if (horse.damId) {
+        if (horse.damId && horseIdSet.has(horse.damId)) {
           edgesList.push({
             id: `e-dam-${horse.damId}-${horse.id}`,
             source: horse.damId,

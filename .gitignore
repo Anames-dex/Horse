@@ -13,6 +13,11 @@ dist-electron
 dist-ssr
 *.local
 
+# Local environment files
+.env
+.env.*
+!.env.example
+
 # Executables
 *.exe
 
